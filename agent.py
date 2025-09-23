@@ -105,7 +105,8 @@ def generate_content(topic: str, tone: str = "friendly", length: int = 12, fmt: 
 
 
 def main_loop():
-    colored("vTTS 💎💎💎. Type 'exit' to quit.","blue",attrs=["bold"])
+
+    print(colored("vTTS 💎💎💎. Type 'exit' to quit.","blue",attrs=["bold"]))
 
     while True:
 
@@ -134,8 +135,9 @@ def main_loop():
 
         safe_name = "".join(c if c.isalnum() else "_" for c in "_".join(topic.split()))[:40]
 
-        speak(content, name=f"{safe_name}_{datetime.now().strftime("%Y-%m-%d_%H-%M")}")
-        
+        filename = f"{safe_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        speak(content, name=filename)
+
         print(colored("🔊 TTS complete.", "green", attrs=["bold"]))
 
 if __name__ == "__main__":
