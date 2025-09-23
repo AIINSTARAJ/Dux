@@ -5,6 +5,7 @@ from gtts import gTTS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from termcolor import colored
+from datetime import datetime
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
@@ -41,25 +42,58 @@ model = os.environ.get("BASE_MODEL", "gemini-1.5-flash")
 
 llm = ChatGoogleGenerativeAI(model=model, temperature=0.2)
 
-PROMPT_TEMPLATE = """
-    You are a helpful creative assistant and voice actor.
-    Task: Produce a {format} about the topic below.
-    Constraints:
-    - Tone: {tone} (e.g. friendly, serious, excited, calm)
-    - Length: approx {length} sentences
-    - Add one short opening line (1 sentence) that hooks the listener.
-    - Add 1–2 short examples or metaphors to illustrate the idea (keep them concise).
-    - End with a single-sentence actionable takeaway.
-    Do NOT include any markup or section headers — produce continuous spoken-style text.
-
-    Topic: {topic}
+Prompt = """
+    You are a world-class content strategist, master storyteller, and elite voice performer with decades of experience across broadcast media, educational platforms, and entertainment industries.
+    
+    Mission: Architect a masterful {format} that transforms the given topic into an unforgettable auditory experience using cutting-edge narrative psychology and persuasion techniques.
+    
+    Core Parameters:
+    - Emotional Tone: {tone} (weave this consistently through every word choice and rhythm)
+    - Precise Length: exactly {length} or more sentence
+    - Communication Style: {style} (completely adapt linguistic patterns, cognitive load, and cultural resonance)
+    
+    Advanced Architecture:
+    
+    OPENING MASTERY: Deploy a magnetic hook using one of these proven techniques:
+    - Provocative question that challenges assumptions
+    - Startling statistic or counterintuitive fact  
+    - Vivid scenario that places listener in the moment
+    - Bold statement that reframes their perspective
+    
+    CORE DEVELOPMENT: Build compelling narrative momentum through:
+    - Multi-sensory examples that create mental movies
+    - Unexpected analogies that bridge familiar to unfamiliar
+    - Personal anecdotes or case studies that humanize concepts
+    - Pattern interrupts that maintain cognitive engagement
+    
+    CLOSING IMPACT: Deliver a crystalline takeaway that:
+    - Provides immediate, actionable next steps
+    - Creates lasting behavioral change potential
+    - Leaves them with quotable wisdom they'll remember and share
+    
+    Technical Excellence Standards:
+    - Engineer for pure audio consumption with natural speech cadence
+    - Embed strategic micro-pauses and emphasis anchors
+    - Eliminate all text-based formatting and structural artifacts  
+    - Create seamless thought-to-thought bridges using transitional mastery
+    - Calibrate complexity, references, and assumptions to match specified style perfectly
+    - Use sensory-rich language that activates multiple learning channels
+    - Incorporate subtle repetition and callback techniques for memory retention
+    
+    Topic Focus: {topic}
 """
 
-def generate_content(topic: str, tone: str = "friendly", length: int = 3, fmt: str = "short paragraph") -> str:
+def generate_content(topic: str, tone: str = "friendly", length: int = 12, fmt: str = "advanced content", style: str = "casual") -> str:
     """
-    Create the filled prompt, invoke Gemini and return text content.
+    AI Integration
     """
-    prompt = PROMPT_TEMPLATE.format(format=fmt, tone=tone, length=length, topic=topic)
+    prompt = Prompt.format(format=fmt,
+                                    tone=tone, 
+                                    length=length, 
+                                    style=style, 
+                                    topic=topic
+                                    )
+    
     response = llm.invoke(prompt)
 
     text = getattr(response, "content", None)
@@ -79,28 +113,30 @@ def main_loop():
         if not topic or topic.lower() in ("exit", "quit"):
             break
 
-        tone = input("Tone (friendly/serious/excited/calm) [friendly]: ").strip() or "friendly"
-        try:
-            length = int(input("Approx sentences (1-8) [3]: ").strip() or 3)
-        except ValueError:
-            length = 3
+        tone = input("Tone: ").strip() or "friendly"
+        style = input("Style: ").strip() or "casual"
 
-        print("\nGenerating... (this may take a second)")
         try:
-            content = generate_content(topic=topic, tone=tone, length=length, fmt="spoken paragraph")
+            length = int(input("Approx sentences (8-∞): ").strip() or 8)
+        except ValueError:
+            length = 8
+
+        print(colored("\n⚡ Generating content... please wait ⚡", "cyan", attrs=["bold"]))
+
+        try:
+            content = generate_content(topic=topic, tone=tone, length=length, fmt="advanced spoken content", style=style)
         except Exception as e:
-            print("Generation failed:", e)
+            print(colored(f"❌ Generation failed: {e}", "red", attrs=["bold"]))
             continue
 
-        print("\n--- GENERATED TEXT ---\n")
-        print(content)
-        print("\nSpeaking now...")
+        print(colored(f"AI: {content}", "white"))
+        print(colored("\n🔊 Speaking now...", "green", attrs=["bold"]))
 
-        safe_name = "".join(c if c.isalnum() else "_" for c in topic)[:40]
+        safe_name = "".join(c if c.isalnum() else "_" for c in "_".join(topic.split()))[:40]
 
-        speak(content, name=f"{safe_name}_{int(time.time())}")
+        speak(content, name=f"{safe_name}_{datetime.now().strftime("%Y-%m-%d_%H-%M")}")
         
-        print("Done speaking.")
+        print(colored("🔊 TTS complete.", "green", attrs=["bold"]))
 
 if __name__ == "__main__":
     main_loop()
