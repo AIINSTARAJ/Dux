@@ -7,14 +7,21 @@ from dotenv import load_dotenv
 from termcolor import colored
 from datetime import datetime
 
+from elevenlabs.client import ElevenLabs
+from elevenlabs import play
+
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
 load_dotenv()
 
 import pygame
 
+client = ElevenLabs(
+    api_key= os.environ.get("LABS_API_KEY")
+)
 
-def speak(text, name="app", lang="en", slow=False):
+
+def speak(text, name="app", lang="en", slow=True):
     """
     Synthesize text -> Speech/{name}.mp3 and play it using pygame.
     """
@@ -22,7 +29,7 @@ def speak(text, name="app", lang="en", slow=False):
 
     filename = f"Speech/{name}.mp3"
 
-    tts = gTTS(text=text, lang=lang, slow=slow)
+    tts = gTTS(text=text, lang=lang, tld="com.au", slow=slow)
     tts.save(filename)
 
     try:
@@ -37,8 +44,22 @@ def speak(text, name="app", lang="en", slow=False):
         time.sleep(0.2)
 
 
+def speak_(text):
+    """
+    Synthesize text -> Speech and play it using ELEVEN LABS.
+    """
+    audio = client.text_to_speech.convert(
+        text=text,
+        voice_id="c1uwEpPUcC16tq1udqxk",
+        model_id="eleven_multilingual_v2",
+        output_format="mp3_44100_128",
+    )
 
-model = os.environ.get("BASE_MODEL", "gemini-1.5-flash")
+    play(audio)
+
+
+
+model = os.environ.get("BASE_MODEL", "gemini-2.0-flash")
 
 llm = ChatGoogleGenerativeAI(model=model, temperature=0.2)
 
@@ -73,12 +94,18 @@ Prompt = """
     
     Technical Excellence Standards:
     - Engineer for pure audio consumption with natural speech cadence
+    - Dont include things like Pause, *, or anything the model will misinterpret as words.
     - Embed strategic micro-pauses and emphasis anchors
     - Eliminate all text-based formatting and structural artifacts  
     - Create seamless thought-to-thought bridges using transitional mastery
     - Calibrate complexity, references, and assumptions to match specified style perfectly
     - Use sensory-rich language that activates multiple learning channels
     - Incorporate subtle repetition and callback techniques for memory retention
+    - The TTS model is eleven labs so optimize for it
+
+    NOTE: 
+    - Don't make it too robotic
+    - Ensure it reflects human style of writing
     
     Topic Focus: {topic}
 """
@@ -136,7 +163,8 @@ def main_loop():
         safe_name = "".join(c if c.isalnum() else "_" for c in "_".join(topic.split()))[:40]
 
         filename = f"{safe_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
-        speak(content, name=filename)
+        #speak(content, name=filename)
+        speak_(content)
 
         print(colored("🔊 TTS complete.", "green", attrs=["bold"]))
 
