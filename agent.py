@@ -8,7 +8,12 @@ from termcolor import colored
 from datetime import datetime
 
 from elevenlabs.client import ElevenLabs
-from elevenlabs import play
+from elevenlabs.play import play
+from elevenlabs import VoiceSettings
+
+import pyttsx3
+
+Engine = pyttsx3.init()
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
@@ -53,11 +58,23 @@ def speak_(text):
         voice_id="c1uwEpPUcC16tq1udqxk",
         model_id="eleven_multilingual_v2",
         output_format="mp3_44100_128",
+        voice_settings= VoiceSettings(
+            stability=0.5, similarity_boost=0.6, style=0.2, use_speaker_boost=True
+        )
     )
 
     play(audio)
 
+def _speak(text,filename, rate=200):
+    """
+    Synthesize text -> Speech and play it using pyttsx3.
+    """
 
+    Engine.setProperty("rate", rate) 
+
+    Engine.say(text)
+
+    Engine.runAndWait()
 
 model = os.environ.get("BASE_MODEL", "gemini-2.0-flash")
 
@@ -80,6 +97,7 @@ Prompt = """
     - Startling statistic or counterintuitive fact  
     - Vivid scenario that places listener in the moment
     - Bold statement that reframes their perspective
+    - REFERENCES where possible
     
     CORE DEVELOPMENT: Build compelling narrative momentum through:
     - Multi-sensory examples that create mental movies
@@ -101,25 +119,26 @@ Prompt = """
     - Calibrate complexity, references, and assumptions to match specified style perfectly
     - Use sensory-rich language that activates multiple learning channels
     - Incorporate subtle repetition and callback techniques for memory retention
-    - The TTS model is eleven labs so optimize for it
+    - It is going to be printed in the CLI, so optimize the output structure
 
     NOTE: 
     - Don't make it too robotic
     - Ensure it reflects human style of writing
+    - Nothing like * in text
     
     Topic Focus: {topic}
 """
 
-def generate_content(topic: str, tone: str = "friendly", length: int = 12, fmt: str = "advanced content", style: str = "casual") -> str:
+def generate_content(topic: str, tone: str = "Friendly", length: int = 12, fmt: str = "advanced content", style: str = "casual") -> str:
     """
     AI Integration
     """
     prompt = Prompt.format(format=fmt,
-                                    tone=tone, 
-                                    length=length, 
-                                    style=style, 
-                                    topic=topic
-                                    )
+                            tone=tone, 
+                            length=length, 
+                            style=style, 
+                            topic=topic
+                        )
     
     response = llm.invoke(prompt)
 
@@ -133,7 +152,7 @@ def generate_content(topic: str, tone: str = "friendly", length: int = 12, fmt: 
 
 def main_loop():
 
-    print(colored("vTTS 💎💎💎. Type 'exit' to quit.","blue",attrs=["bold"]))
+    print(colored("vTTS 💎💎💎. Type 'exit' to quit.","cyan",attrs=["bold"]))
 
     while True:
 
@@ -152,7 +171,7 @@ def main_loop():
         print(colored("\n⚡ Generating content... please wait ⚡", "cyan", attrs=["bold"]))
 
         try:
-            content = generate_content(topic=topic, tone=tone, length=length, fmt="advanced spoken content", style=style)
+            content = generate_content(topic=topic, tone=tone, length=length, fmt="Advanced spoken content", style=style)
         except Exception as e:
             print(colored(f"❌ Generation failed: {e}", "red", attrs=["bold"]))
             continue
@@ -163,8 +182,8 @@ def main_loop():
         safe_name = "".join(c if c.isalnum() else "_" for c in "_".join(topic.split()))[:40]
 
         filename = f"{safe_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
-        #speak(content, name=filename)
-        speak_(content)
+        
+        _speak(content,filename)
 
         print(colored("🔊 TTS complete.", "green", attrs=["bold"]))
 
